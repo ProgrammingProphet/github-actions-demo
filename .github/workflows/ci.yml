@@ -1,45 +1,122 @@
+# --------------------------------------------
+# Workflow Name (Visible in GitHub Actions tab)
+# --------------------------------------------
 name: CI + DockerHub Pipeline
 
+# --------------------------------------------
+# Trigger Condition
+# This pipeline runs automatically
+# whenever code is pushed to the main branch
+# --------------------------------------------
 on:
   push:
     branches:
       - main
 
+# --------------------------------------------
+# Jobs Section
+# A workflow can have multiple jobs.
+# Here we define one job: build-and-push
+# --------------------------------------------
 jobs:
   build-and-push:
+    # Runner Environment
+    # GitHub provides a fresh Ubuntu VM for each run
     runs-on: ubuntu-latest
 
+    # -------------------------------------------------
+    # Steps
+    # Steps run sequentially inside the runner
+    # -------------------------------------------------
     steps:
-      # 1️⃣ Checkout repository
+      # ----------------------------------------
+      # Step 1: Checkout Repository Code
+      # This downloads your GitHub repo code
+      # into the runner so the pipeline can use it
+      # ----------------------------------------
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
+      # ----------------------------------------
+      # Step 2: Setup Node.js Environment
+      # Installs Node 18 in the runner VM
+      # Required to install dependencies & run tests
+      # ----------------------------------------
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 3️⃣ Install dependencies
+      # ----------------------------------------
+      # Step 3: Install Project Dependencies
+      # Executes npm install inside runner
+      # ----------------------------------------
       - name: Install Dependencies
         run: npm install
 
-      # 4️⃣ Run tests
+      # ----------------------------------------
+      # Step 4: Run Application Tests
+      # If this step fails, pipeline stops
+      # This enforces CI quality control
+      # ----------------------------------------
       - name: Run Tests
         run: npm test
 
-      # 5️⃣ Login to DockerHub
+      # ----------------------------------------
+      # Step 5: Login to DockerHub
+      # Uses official Docker login action
+      # Credentials are securely stored in
+      # GitHub Secrets (never hardcoded)
+      # ----------------------------------------
       - name: Login to DockerHub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 6️⃣ Build Docker image
+      # ----------------------------------------
+      # Step 6: Build Docker Image
+      # Builds image using your Dockerfile
+      #
+      # Two tags are created:
+      # 1. latest       → rolling version
+      # 2. github.sha   → unique version per commit
+      #
+      # github.sha ensures version traceability
+      # ----------------------------------------
       - name: Build Docker Image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/demo-app:latest .
           docker build -t ${{ secrets.DOCKER_USERNAME }}/demo-app:${{ github.sha }} .
 
-      # 7️⃣ Push Docker image
+      # ----------------------------------------
+      # Step 7: Push Docker Image to DockerHub
+      # Publishes both tags
+      # After this, image is available publicly
+      # or privately in your DockerHub repository
+      # ----------------------------------------
       - name: Push Docker Image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/demo-app:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/demo-app:${{ github.sha }}
+
+# Trigger (push to main)
+#    ↓
+# Get code
+#    ↓
+# Prepare Node environment
+#    ↓
+# Install dependencies
+#    ↓
+# Run tests
+#    ↓
+# Authenticate with DockerHub
+#    ↓
+# Build Docker image
+#    ↓
+# Push image to registry
+
+# # 5️⃣ Login to DockerHub
+# - name: Login to DockerHub
+#   run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
