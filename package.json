@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "start": "node index.js",
-  "test": "echo \"Test Passed\""
-},
+    "start": "node index.js",
+    "test": "echo \"Test Passed\""
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
