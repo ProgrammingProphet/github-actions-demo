@@ -1,4 +1,5 @@
 # 📦 CI + Docker Automation with GitHub Actions
+<img width="1136" height="821" alt="image" src="https://github.com/user-attachments/assets/d48c0145-d474-4a57-b80b-1cc517522b8c" />
 
 This project demonstrates a complete **CI/CD pipeline** using:
 
